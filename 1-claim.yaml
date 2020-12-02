@@ -1,0 +1,13 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: traefik-acme
+  namespace: traefik
+spec:
+  storageClassName: ceph-cephfs
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50M

@@ -1,0 +1,89 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: traefik
+  name: traefik
+  labels:
+    app: traefik
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      volumes:
+        - name: traefik-acme
+          persistentVolumeClaim:
+            claimName: traefik-acme
+      initContainers:
+        - name: traefik-acme-chmod
+          image: traefik:v2.3.1
+          command: ["/bin/chmod","-R","600", "/letsencrypt"]
+          volumeMounts:
+            - name: traefik-acme
+              mountPath: "/letsencrypt"
+      containers:
+        - name: traefik
+          image: traefik:v2.3.1
+          args:
+            - --ping=true
+            - --api.insecure=true
+            - --api.dashboard=true
+            ## Logging-metrics
+            - --accesslog=true
+            - --metrics.prometheus=true
+            - --tracing.jaeger=false
+            ## Entrypoints
+            ### https
+            - --entrypoints.websecure.Address=:443
+            - --entrypoints.websecure.http.tls
+            - --entrypoints.web.Address=:80
+            ### http
+            - --entrypoints.web.http.redirections.entryPoint.to=websecure
+            - --entrypoints.web.http.redirections.entryPoint.scheme=https
+            ### mariadb
+            - --entrypoints.mariadb.Address=:3306
+            ### postgres
+            - --entrypoints.postgres.Address=:5432
+            ### mssql
+            - --entrypoints.mssql.Address=:1433
+            ### mongodb
+            - --entrypoints.mongodb.Address=:27017
+            ## Providers
+            - --providers.kubernetescrd=true
+            - --providers.kubernetesingress=true
+            ## Letsencrypt-stuff
+            - --certificatesresolvers.default.acme.tlschallenge
+            - --certificatesresolvers.default.acme.email=support@vmar.se
+            - --certificatesresolvers.default.acme.storage=/letsencrypt/acme.json
+          volumeMounts:
+            - name: traefik-acme
+              mountPath: "/letsencrypt"
+          ports:
+            - name: websecure
+              containerPort: 443
+            - name: web
+              containerPort: 80
+            - name: mariadb
+              containerPort: 3306
+            - name: postgres
+              containerPort: 5432
+            - name: mongodb
+              containerPort: 27017
+            - name: mssql
+              containerPort: 1433
+            - name: admin
+              containerPort: 8080
+      tolerations:
+         - key: node-role.kubernetes.io/master
+           operator: "Equal"
+           value: "true"
+           effect: "NoSchedule"
