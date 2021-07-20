@@ -2,9 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: traefik
-  namespace: traefik
+  namespace: traefik-system
   annotations:
-    metallb.universe.tf/address-pool: internal
+    metallb.universe.tf/address-pool: default
 spec:
   type: LoadBalancer   
   ports:
@@ -14,13 +14,5 @@ spec:
     - protocol: TCP
       name: web
       port: 80
-    - name: mariadb
-      port: 3306
-    - name: postgres
-      port: 5432
-    - name: mssql
-      port: 1433
-    - name: mongodb
-      port: 27017
   selector:
     app: traefik

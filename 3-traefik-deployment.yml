@@ -2,14 +2,14 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  namespace: traefik
+  namespace: traefik-system
   name: traefik
   labels:
     app: traefik
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
-    type: RollingUpdate
+    type: Recreate
   selector:
     matchLabels:
       app: traefik
@@ -25,14 +25,14 @@ spec:
             claimName: traefik-acme
       initContainers:
         - name: traefik-acme-chmod
-          image: traefik:v2.3.1
+          image: traefik:v2.4
           command: ["/bin/chmod","-R","600", "/letsencrypt"]
           volumeMounts:
             - name: traefik-acme
               mountPath: "/letsencrypt"
       containers:
         - name: traefik
-          image: traefik:v2.3.1
+          image: traefik:v2.4
           args:
             - --ping=true
             - --api.insecure=true
@@ -40,7 +40,6 @@ spec:
             ## Logging-metrics
             - --accesslog=true
             - --metrics.prometheus=true
-            - --tracing.jaeger=false
             ## Entrypoints
             ### https
             - --entrypoints.websecure.Address=:443
@@ -49,14 +48,6 @@ spec:
             ### http
             - --entrypoints.web.http.redirections.entryPoint.to=websecure
             - --entrypoints.web.http.redirections.entryPoint.scheme=https
-            ### mariadb
-            - --entrypoints.mariadb.Address=:3306
-            ### postgres
-            - --entrypoints.postgres.Address=:5432
-            ### mssql
-            - --entrypoints.mssql.Address=:1433
-            ### mongodb
-            - --entrypoints.mongodb.Address=:27017
             ## Providers
             - --providers.kubernetescrd=true
             - --providers.kubernetesingress=true
@@ -72,18 +63,5 @@ spec:
               containerPort: 443
             - name: web
               containerPort: 80
-            - name: mariadb
-              containerPort: 3306
-            - name: postgres
-              containerPort: 5432
-            - name: mongodb
-              containerPort: 27017
-            - name: mssql
-              containerPort: 1433
             - name: admin
               containerPort: 8080
-      tolerations:
-         - key: node-role.kubernetes.io/master
-           operator: "Equal"
-           value: "true"
-           effect: "NoSchedule"

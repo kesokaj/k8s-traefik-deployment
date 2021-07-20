@@ -3,9 +3,9 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: traefik-acme
-  namespace: traefik
+  namespace: traefik-system
 spec:
-  storageClassName: ceph-cephfs
+  storageClassName: longhorn
   accessModes:
     - ReadWriteMany
   resources:
