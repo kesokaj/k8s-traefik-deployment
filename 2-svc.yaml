@@ -4,7 +4,7 @@ metadata:
   name: traefik
   namespace: traefik-system
   annotations:
-    metallb.universe.tf/address-pool: default
+    metallb.universe.tf/address-pool: traefik
 spec:
   type: LoadBalancer   
   ports:
@@ -14,5 +14,8 @@ spec:
     - protocol: TCP
       name: web
       port: 80
+    - protocol: TCP
+      name: admin
+      port: 8080
   selector:
     app: traefik

@@ -26,15 +26,14 @@ spec:
       initContainers:
         - name: traefik-acme-chmod
           image: traefik:v2.4
-          command: ["/bin/chmod","-R","600", "/letsencrypt"]
+          command: ["/bin/chmod","-R","600", "/letsencrypt/acme.json"]
           volumeMounts:
             - name: traefik-acme
               mountPath: "/letsencrypt"
       containers:
         - name: traefik
-          image: traefik:v2.4
+          image: traefik:v2.5.3
           args:
-            - --ping=true
             - --api.insecure=true
             - --api.dashboard=true
             ## Logging-metrics
@@ -53,7 +52,7 @@ spec:
             - --providers.kubernetesingress=true
             ## Letsencrypt-stuff
             - --certificatesresolvers.default.acme.tlschallenge
-            - --certificatesresolvers.default.acme.email=support@vmar.se
+            - --certificatesresolvers.default.acme.email=simon.ostling@arrow.com
             - --certificatesresolvers.default.acme.storage=/letsencrypt/acme.json
           volumeMounts:
             - name: traefik-acme
